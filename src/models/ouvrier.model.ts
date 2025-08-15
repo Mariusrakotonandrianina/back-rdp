@@ -1,10 +1,12 @@
 import { Schema, model, Document } from "mongoose";
 
+export type StatutOuvrier = "disponible" | "occupe" | "absent";
+
 export interface IOuvrier extends Document {
     nom: string;
     specialite: string;
     niveau: "Expert" | "Confirmé" | "Débutant";
-    statut: "disponible" | "occupe" | "pause";
+    statut: StatutOuvrier;
     tacheActuelle?: string | null;
     heuresJour: number;
     heuresMax: number;
@@ -21,7 +23,7 @@ const OuvrierSchema = new Schema<IOuvrier>({
     },
     statut: {
         type: String,
-        enum: ["disponible", "occupe", "pause"],
+        enum: ["disponible", "occupe", "absent"],
         required: true,
     },
     tacheActuelle: { type: String, default: null },
@@ -29,4 +31,5 @@ const OuvrierSchema = new Schema<IOuvrier>({
     heuresMax: { type: Number, required: true },
     competences: { type: [String], required: true },
 });
+
 export const Ouvrier = model<IOuvrier>("Ouvrier", OuvrierSchema);
