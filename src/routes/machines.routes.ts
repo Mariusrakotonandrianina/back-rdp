@@ -8,6 +8,7 @@ import {
   filterByStatus,
   filterByType,
   listTypes,
+  updateMachineStatus
 } from "../controllers/machines.controller";
 
 const machinesRoutes = Router();
@@ -21,5 +22,6 @@ machinesRoutes.delete("/:id", deleteMachine);
 machinesRoutes.get("/status/:status", filterByStatus);
 machinesRoutes.get("/type/:type", filterByType);
 machinesRoutes.get("/meta/types", listTypes);
+machinesRoutes.patch("/:id/status", updateMachineStatus);
 
 export default machinesRoutes;

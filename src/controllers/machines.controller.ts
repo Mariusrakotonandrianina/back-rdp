@@ -54,3 +54,26 @@ export const listTypes = async (_req: Request, res: Response) => {
   const types = await Machine.distinct("type");
   res.json(types);
 };
+
+// Changer uniquement le statut d'une machine
+export const updateMachineStatus = async (req: Request, res: Response) => {
+  const { status } = req.body;
+
+  // Vérification de la valeur du statut
+  if (!["active", "panne", "maintenance"].includes(status)) {
+    return res.status(400).json({ message: "Statut invalide" });
+  }
+
+  const updated = await Machine.findByIdAndUpdate(
+    req.params.id,
+    { status },
+    { new: true }
+  );
+
+  if (!updated) {
+    return res.status(404).json({ message: "Machine non trouvée" });
+  }
+
+  res.json(updated);
+};
+
