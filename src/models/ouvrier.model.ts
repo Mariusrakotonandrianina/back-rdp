@@ -10,7 +10,8 @@ export interface IOuvrier extends Document {
     tacheSuivante?: string | null;
     heuresJour: number;
     heuresMax: number;
-    competences: string[];
+    competences: string[]; // Doivent correspondre aux atelier.usage et machine.usage
+    ateliersAutorises?: string[]; // IDs des ateliers où l'ouvrier peut travailler
 }
 
 const OuvrierSchema = new Schema<IOuvrier>({
@@ -29,7 +30,14 @@ const OuvrierSchema = new Schema<IOuvrier>({
     tacheSuivante: { type: String, default: null },
     heuresJour: { type: Number, required: true },
     heuresMax: { type: Number, required: true },
-    competences: { type: [String], required: true },
+    competences: { 
+        type: [String], 
+        required: true 
+    }, // Ex: ["soudure", "assemblage"]
+    ateliersAutorises: [{ type: Schema.Types.ObjectId, ref: "Atelier" }],
 });
+
+// Index pour optimiser les requêtes par compétences et statut
+OuvrierSchema.index({ competences: 1, statut: 1 });
 
 export const Ouvrier = model<IOuvrier>("Ouvrier", OuvrierSchema);

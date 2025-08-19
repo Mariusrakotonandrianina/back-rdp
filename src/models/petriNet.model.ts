@@ -6,6 +6,7 @@ export interface IPlace extends Document {
   tokens: number;
   capacite?: number;
   resourceId?: string;
+  usage?: string; // Ajout pour la cohérence des usages
 }
 
 export interface ITransition extends Document {
@@ -14,6 +15,8 @@ export interface ITransition extends Document {
   enabled: boolean;
   conditions?: string[];
   duree?: number;
+  usageRequis?: string; // Usage requis pour cette transition
+  tacheId?: string; // Référence à la tâche correspondante
 }
 
 export interface IArc extends Document {
@@ -34,6 +37,7 @@ export interface IPetriNetState extends Document {
     transition: string;
     etatAvant: Map<string, number>;
     etatApres: Map<string, number>;
+    tacheId?: string;
   }[];
 }
 
@@ -47,6 +51,7 @@ const PlaceSchema = new Schema<IPlace>({
   tokens: { type: Number, default: 0 },
   capacite: { type: Number },
   resourceId: { type: String },
+  usage: { type: String }, // Ex: "soudure", "assemblage"
 });
 
 const TransitionSchema = new Schema<ITransition>({
@@ -59,6 +64,8 @@ const TransitionSchema = new Schema<ITransition>({
   enabled: { type: Boolean, default: true },
   conditions: { type: [String], default: [] },
   duree: { type: Number, default: 0 },
+  usageRequis: { type: String }, // Usage nécessaire pour déclencher la transition
+  tacheId: { type: Schema.Types.ObjectId, ref: "Tache" },
 });
 
 const ArcSchema = new Schema<IArc>({
@@ -84,6 +91,7 @@ const PetriNetStateSchema = new Schema<IPetriNetState>({
       transition: String,
       etatAvant: { type: Map, of: Number },
       etatApres: { type: Map, of: Number },
+      tacheId: { type: Schema.Types.ObjectId, ref: "Tache" },
     },
   ],
 });

@@ -3,11 +3,12 @@ import { Schema, model, Document } from "mongoose";
 export interface IAtelier extends Document {
   nom: string;
   localisation: string;
-  superficie: number; // en m²
+  superficie: number;
   capaciteEmployes: number;
   ouvrierActuelle: number;
   status: "actif" | "ferme" | "maintenance";
   usage: string;
+  machinesAssociees?: string[];
 }
 
 const AtelierSchema = new Schema<IAtelier>({
@@ -22,6 +23,9 @@ const AtelierSchema = new Schema<IAtelier>({
     required: true,
   },
   usage: { type: String, required: true },
+  machinesAssociees: [{ type: Schema.Types.ObjectId, ref: "Machine" }],
 });
+
+AtelierSchema.index({ usage: 1, status: 1 });
 
 export const Atelier = model<IAtelier>("Atelier", AtelierSchema);
