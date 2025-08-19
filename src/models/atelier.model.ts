@@ -5,7 +5,9 @@ export interface IAtelier extends Document {
   localisation: string;
   superficie: number; // en m²
   capaciteEmployes: number;
+  ouvrierActuelle: number;
   status: "actif" | "ferme" | "maintenance";
+  usage: string;
 }
 
 const AtelierSchema = new Schema<IAtelier>({
@@ -13,11 +15,13 @@ const AtelierSchema = new Schema<IAtelier>({
   localisation: { type: String, required: true },
   superficie: { type: Number, required: true },
   capaciteEmployes: { type: Number, required: true },
+  ouvrierActuelle: { type: Number, required: true, default: 0 },
   status: {
     type: String,
     enum: ["actif", "ferme", "maintenance"],
     required: true,
   },
+  usage: { type: String, required: true },
 });
 
 export const Atelier = model<IAtelier>("Atelier", AtelierSchema);

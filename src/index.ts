@@ -5,7 +5,6 @@ dotenv.config();
 
 import { connectDB } from "./database";
 import machinesRoutes from "./routes/machines.routes";
-import outilsRoutes from "./routes/outils.routes";
 import ouvriersRoutes from "./routes/ouvriers.routes";
 import ateliersRoutes from "./routes/atelier.routes";
 import petriNetRoutes from "./routes/petriNet.routes";
@@ -17,7 +16,6 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.use("/machines", machinesRoutes);
-app.use("/outils", outilsRoutes);
 app.use("/ouvriers", ouvriersRoutes);
 app.use("/ateliers", ateliersRoutes);
 app.use("/petri-net", petriNetRoutes)

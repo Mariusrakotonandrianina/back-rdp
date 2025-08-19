@@ -1,15 +1,13 @@
 import { Schema, model, Document } from "mongoose";
 
-// Place du réseau de Petri
 export interface IPlace extends Document {
   nom: string;
   type: "machine" | "ouvrier" | "atelier" | "tache" | "ressource";
   tokens: number;
   capacite?: number;
-  resourceId?: string; // Référence vers la ressource réelle (machine, ouvrier, atelier)
+  resourceId?: string;
 }
 
-// Transition du réseau de Petri
 export interface ITransition extends Document {
   nom: string;
   type: "affectation" | "liberation" | "maintenance" | "production";
@@ -18,7 +16,6 @@ export interface ITransition extends Document {
   duree?: number;
 }
 
-// Arc du réseau de Petri
 export interface IArc extends Document {
   from: string;
   to: string;
@@ -26,13 +23,12 @@ export interface IArc extends Document {
   type: "place-to-transition" | "transition-to-place";
 }
 
-// État global du réseau de Petri
 export interface IPetriNetState extends Document {
   nom: string;
-  places: string[]; // IDs des places
-  transitions: string[]; // IDs des transitions
-  arcs: string[]; // IDs des arcs
-  etatActuel: Map<string, number>; // État actuel des jetons par place
+  places: string[];
+  transitions: string[];
+  arcs: string[];
+  etatActuel: Map<string, number>;
   historique: {
     timestamp: Date;
     transition: string;

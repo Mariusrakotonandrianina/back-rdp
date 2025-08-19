@@ -6,6 +6,7 @@ export interface IMachine extends Document {
   capacite: number;
   status: "active" | "panne" | "maintenance";
   utilisation: number;
+  usage: string;
 }
 
 const MachineSchema = new Schema<IMachine>({
@@ -18,6 +19,7 @@ const MachineSchema = new Schema<IMachine>({
     required: true,
   },
   utilisation: { type: Number, required: true },
+  usage: { type: String, required: true },
 });
 
 export const Machine = model<IMachine>("Machine", MachineSchema);
