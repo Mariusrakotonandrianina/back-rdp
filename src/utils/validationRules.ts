@@ -1,11 +1,10 @@
 import { Atelier } from "../models/atelier.model";
 import { Machine } from "../models/machine.model";
 import { Ouvrier } from "../models/ouvrier.model";
-import { Tache } from "../models/use.model";
+import { Tache } from "../models/tache.model";
 
 export class ValidationRules {
   
-    // Vérifier la cohérence usage atelier <-> machine
     static async validateAtelierMachineUsage(atelierId: string, machineId: string): Promise<boolean> {
       const atelier = await Atelier.findById(atelierId);
       const machine = await Machine.findById(machineId);
@@ -15,7 +14,6 @@ export class ValidationRules {
       return atelier.usage === machine.usage;
     }
     
-    // Vérifier qu'un ouvrier a la compétence pour une tâche
     static async validateOuvrierCompetence(ouvrierId: string, tacheId: string): Promise<boolean> {
       const ouvrier = await Ouvrier.findById(ouvrierId);
       const tache = await Tache.findById(tacheId);
@@ -34,7 +32,6 @@ export class ValidationRules {
       return ouvrier.competences.includes(atelier.usage);
     }
     
-    // Trouver les ressources compatibles pour une tâche
     static async findCompatibleResources(tacheId: string) {
       const tache = await Tache.findById(tacheId);
       if (!tache) return null;
@@ -58,5 +55,4 @@ export class ValidationRules {
     }
   }
   
-  // Export des modèles
   export { Atelier, Machine, Ouvrier, Tache };

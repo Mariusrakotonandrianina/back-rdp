@@ -8,6 +8,7 @@ import machinesRoutes from "./routes/machines.routes";
 import ouvriersRoutes from "./routes/ouvriers.routes";
 import ateliersRoutes from "./routes/atelier.routes";
 import petriNetRoutes from "./routes/petriNet.routes";
+import tacheRoutes from "./routes/tache.routes";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use("/machines", machinesRoutes);
 app.use("/ouvriers", ouvriersRoutes);
 app.use("/ateliers", ateliersRoutes);
 app.use("/petri-net", petriNetRoutes)
+app.use("/taches", tacheRoutes);
 
 connectDB().then(() => {
   app.listen(port, () => {
