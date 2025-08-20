@@ -9,7 +9,8 @@ import {
     filterByLocalisation,
     listLocalisations,
     updateAtelierStatus,
-    getAteliersStatistics
+    getAteliersStatistics,
+    cycleAtelierStatus
 } from "../controllers/atelier.controller";
 
 const ateliersRoutes = Router();
@@ -17,11 +18,12 @@ const ateliersRoutes = Router();
 // Routes spéciales d'abord
 ateliersRoutes.get("/statistiques", getAteliersStatistics);
 ateliersRoutes.get("/meta/localisations", listLocalisations);
-ateliersRoutes.get("/status/:status", filterByStatus);
+ateliersRoutes.get("/status/:status", filterByStatus); // tsy mbola mande
 ateliersRoutes.get("/localisation/:localisation", filterByLocalisation);
 
 // Mise à jour du statut
-ateliersRoutes.patch("/:id/status", updateAtelierStatus);
+ateliersRoutes.patch("/:id/:status", updateAtelierStatus);      // Statut spécifique ou cycle
+ateliersRoutes.patch("/:id/cycle-status", cycleAtelierStatus);
 
 // Routes CRUD
 ateliersRoutes.get("/", getAllAteliers);

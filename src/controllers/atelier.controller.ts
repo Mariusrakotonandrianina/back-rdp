@@ -52,7 +52,7 @@ export const deleteAtelier = async (req: Request, res: Response) => {
 
 export const filterByStatus = async (req: Request, res: Response) => {
     try {
-        const status = String(req.params.status ?? "");
+        const status = req.params.status as string;
         const statusValides = ["actif", "ferme", "maintenance"];
         
         if (!statusValides.includes(status)) {
@@ -88,13 +88,54 @@ export const listLocalisations = async (_req: Request, res: Response) => {
 // Mettre à jour le statut d'un atelier
 export const updateAtelierStatus = async (req: Request, res: Response) => {
     try {
-        const { status } = req.body;
+        // Récupérer le statut depuis l'URL (req.params.status) avec vérification TypeScript
+        const status = req.params.status as string;
         const statusValides = ["actif", "ferme", "maintenance"];
         
-        if (!statusValides.includes(status)) {
-            return res.status(400).json({ message: "Statut invalide" });
+        // Vérifier que le paramètre status existe
+        if (!status) {
+            return res.status(400).json({ message: "Paramètre status manquant dans l'URL" });
         }
         
+        // Si le statut dans l'URL est "cycle", faire une rotation cyclique
+        if (status === "cycle") {
+            const atelier = await Atelier.findById(req.params.id);
+            if (!atelier) {
+                return res.status(404).json({ message: "Atelier non trouvé" });
+            }
+            
+            // Définir la rotation cyclique
+            const cycleStatuts = {
+                "actif": "ferme",
+                "ferme": "maintenance", 
+                "maintenance": "actif"
+            };
+            
+            const nouveauStatut = cycleStatuts[atelier.status as keyof typeof cycleStatuts];
+            
+            const updated = await Atelier.findByIdAndUpdate(
+                req.params.id,
+                { status: nouveauStatut },
+                { new: true }
+            );
+            
+            return res.json({
+                message: `Statut basculé de "${atelier.status}" vers "${nouveauStatut}"`,
+                ancienStatut: atelier.status,
+                nouveauStatut,
+                cycle: "actif → ferme → maintenance → actif",
+                atelier: updated
+            });
+        }
+        
+        // Sinon, vérifier que le statut est valide
+        if (!statusValides.includes(status)) {
+            return res.status(400).json({ 
+                message: `Statut invalide. Statuts autorisés: ${statusValides.join(", ")} ou "cycle"` 
+            });
+        }
+        
+        // Mettre à jour avec le statut spécifique
         const updated = await Atelier.findByIdAndUpdate(
             req.params.id,
             { status },
@@ -105,9 +146,46 @@ export const updateAtelierStatus = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Atelier non trouvé" });
         }
         
-        res.json(updated);
+        res.json({
+            message: `Statut mis à jour vers "${status}"`,
+            nouveauStatut: status,
+            atelier: updated
+        });
+        
     } catch (error) {
         res.status(500).json({ message: "Erreur lors de la mise à jour du statut" });
+    }
+};
+
+// Alternative: Fonction dédiée pour le cycle uniquement
+export const cycleAtelierStatus = async (req: Request, res: Response) => {
+    try {
+        const atelier = await Atelier.findById(req.params.id);
+        if (!atelier) {
+            return res.status(404).json({ message: "Atelier non trouvé" });
+        }
+        
+        // Rotation cyclique : actif → ferme → maintenance → actif
+        const cycleStatuts = {
+            "actif": "ferme",
+            "ferme": "maintenance", 
+            "maintenance": "actif"
+        };
+        
+        const nouveauStatut = cycleStatuts[atelier.status as keyof typeof cycleStatuts];
+        
+        const updated = await Atelier.findByIdAndUpdate(
+            req.params.id,
+            { status: nouveauStatut },
+            { new: true }
+        );
+        
+        res.json({
+            atelier: updated
+        });
+        
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors du basculement du statut" });
     }
 };
 
