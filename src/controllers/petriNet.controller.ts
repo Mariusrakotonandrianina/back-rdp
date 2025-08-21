@@ -129,7 +129,6 @@ export const resetNetwork = async (_req: Request, res: Response) => {
   }
 };
 
-// Nouvelle méthode pour obtenir les places avec leurs détails
 export const getPlaces = async (_req: Request, res: Response) => {
   try {
     const state = await petriNetService.getCurrentState();
@@ -153,7 +152,6 @@ export const getPlaces = async (_req: Request, res: Response) => {
   }
 };
 
-// Nouvelle méthode pour obtenir les transitions avec leur état
 export const getTransitions = async (_req: Request, res: Response) => {
   try {
     const state = await petriNetService.getCurrentState();
@@ -180,7 +178,6 @@ export const getTransitions = async (_req: Request, res: Response) => {
   }
 };
 
-// Méthode pour vérifier si une transition spécifique est activable
 export const isTransitionEnabled = async (req: Request, res: Response) => {
   try {
     const { transitionId } = req.params;
@@ -207,7 +204,6 @@ export const isTransitionEnabled = async (req: Request, res: Response) => {
   }
 };
 
-// Méthode pour obtenir un résumé complet du système
 export const getSystemSummary = async (_req: Request, res: Response) => {
   try {
     const [state, networkInfo, realStateCounts] = await Promise.all([

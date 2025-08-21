@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { Ouvrier, IOuvrier, StatutOuvrier } from "../models/ouvrier.model";
 
-// Récupérer tous les ouvriers
 export const getAllOuvriers = async (_req: Request, res: Response) => {
     try {
         const ouvriers = await Ouvrier.find().populate('ateliersAutorises', 'nom localisation usage');
@@ -11,7 +10,6 @@ export const getAllOuvriers = async (_req: Request, res: Response) => {
     }
 };
 
-// Récupérer un ouvrier par ID
 export const getOuvrier = async (req: Request, res: Response) => {
     try {
         const ouvrier = await Ouvrier.findById(req.params.id).populate('ateliersAutorises', 'nom localisation usage');
@@ -22,7 +20,6 @@ export const getOuvrier = async (req: Request, res: Response) => {
     }
 };
 
-// Créer un ouvrier
 export const createOuvrier = async (req: Request, res: Response) => {
     try {
         const newOuvrier = new Ouvrier(req.body);
@@ -33,7 +30,6 @@ export const createOuvrier = async (req: Request, res: Response) => {
     }
 };
 
-// Mettre à jour un ouvrier
 export const updateOuvrier = async (req: Request, res: Response) => {
     try {
         const updated = await Ouvrier.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -44,7 +40,6 @@ export const updateOuvrier = async (req: Request, res: Response) => {
     }
 };
 
-// Supprimer un ouvrier
 export const deleteOuvrier = async (req: Request, res: Response) => {
     try {
         const deleted = await Ouvrier.findByIdAndDelete(req.params.id);
@@ -55,7 +50,6 @@ export const deleteOuvrier = async (req: Request, res: Response) => {
     }
 };
 
-// Filtrer par statut
 export const getOuvriersByStatut = async (req: Request, res: Response) => {
     try {
         const statut = req.params.statut as StatutOuvrier;
@@ -74,7 +68,6 @@ export const getOuvriersByStatut = async (req: Request, res: Response) => {
     }
 };
 
-// Filtrer par niveau
 export const getOuvriersByNiveau = async (req: Request, res: Response) => {
     try {
         const niveau = String(req.params.niveau ?? "");
@@ -93,7 +86,6 @@ export const getOuvriersByNiveau = async (req: Request, res: Response) => {
     }
 };
 
-// Filtrer par compétence
 export const getOuvriersByCompetence = async (req: Request, res: Response) => {
     try {
         const competence = req.params.competence;
@@ -104,7 +96,6 @@ export const getOuvriersByCompetence = async (req: Request, res: Response) => {
     }
 };
 
-// Lister toutes les compétences disponibles
 export const listCompetences = async (_req: Request, res: Response) => {
     try {
         const competences = await Ouvrier.distinct("competences");
@@ -114,49 +105,104 @@ export const listCompetences = async (_req: Request, res: Response) => {
     }
 };
 
-// Mettre à jour uniquement le statut
-export const updateOuvrierStatut = async (req: Request, res: Response) => {
+export const updateOuvrierStatus = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const { statut } = req.body as { statut: StatutOuvrier };
-
-        const statutsValides: StatutOuvrier[] = ["disponible", "occupe", "absent"];
-        if (!statut || !statutsValides.includes(statut)) {
-            return res.status(400).json({
-                message: `Statut invalide. Statuts autorisés: ${statutsValides.join(", ")}`
+        const status = req.params.status as string;
+        const statusValides = ["disponible", "occupe", "absent"];
+        
+        if (!status) {
+            return res.status(400).json({ message: "Paramètre status manquant dans l'URL" });
+        }
+        
+        if (status === "cycle") {
+            const ouvrier = await Ouvrier.findById(req.params.id);
+            if (!ouvrier) {
+                return res.status(404).json({ message: "Ouvrier non trouvé" });
+            }
+            
+            const cycleStatuts = {
+                "disponible": "occupe",
+                "occupe": "absent", 
+                "absent": "disponible"
+            };
+            
+            const nouveauStatut = cycleStatuts[ouvrier.statut as keyof typeof cycleStatuts];
+            
+            const updated = await Ouvrier.findByIdAndUpdate(
+                req.params.id,
+                { statut: nouveauStatut },
+                { new: true }
+            );
+            
+            return res.json({
+                message: `Statut cyclé de "${ouvrier.statut}" vers "${nouveauStatut}"`,
+                nouveauStatut,
+                ouvrier: updated
             });
         }
 
-        const ouvrierActuel = await Ouvrier.findById(id);
-        if (!ouvrierActuel) {
+        if (!statusValides.includes(status)) {
+            return res.status(400).json({ 
+                message: `Statut invalide. Statuts autorisés: ${statusValides.join(", ")} ou "cycle"` 
+            });
+        }
+        
+        const updated = await Ouvrier.findByIdAndUpdate(
+            req.params.id,
+            { statut: status },
+            { new: true }
+        );
+        
+        if (!updated) {
             return res.status(404).json({ message: "Ouvrier non trouvé" });
         }
-
-        let updateData: Partial<IOuvrier> = { statut };
-
-        // Logique métier : réinitialiser les tâches selon le statut
-        if (statut === "disponible") {
-            updateData.tacheActuelle = null;
-            updateData.heuresJour = 0; // Remettre à zéro pour nouveau décompte
-        } else if (statut === "absent") {
-            updateData.tacheActuelle = null;
-            updateData.tacheSuivante = null;
-            updateData.heuresJour = 0;
-        }
-        // Si statut = "occupe", on garde les tâches actuelles
-
-        const ouvrierMisAJour = await Ouvrier.findByIdAndUpdate(id, updateData, { new: true });
         
         res.json({
-            message: `Statut mis à jour vers "${statut}"`,
-            ouvrier: ouvrierMisAJour
+            message: `Statut mis à jour vers "${status}"`,
+            nouveauStatut: status,
+            ouvrier: updated
         });
+        
     } catch (error) {
+        console.error("Erreur lors de la mise à jour du statut:", error);
         res.status(500).json({ message: "Erreur lors de la mise à jour du statut" });
     }
 };
 
-// Basculement automatique du statut (toggle)
+export const cycleOuvrierStatus = async (req: Request, res: Response) => {
+    try {
+        const ouvrier = await Ouvrier.findById(req.params.id);
+        if (!ouvrier) {
+            return res.status(404).json({ message: "Ouvrier non trouvé" });
+        }
+        
+        const cycleStatuts = {
+            "disponible": "occupe",
+            "occupe": "absent", 
+            "absent": "disponible"
+        };
+        
+        const nouveauStatut = cycleStatuts[ouvrier.statut as keyof typeof cycleStatuts];
+        
+        const updated = await Ouvrier.findByIdAndUpdate(
+            req.params.id,
+            { statut: nouveauStatut },
+            { new: true }
+        );
+        
+        res.json({
+            message: `Statut cyclé de "${ouvrier.statut}" vers "${nouveauStatut}"`,
+            ancienStatut: ouvrier.statut,
+            nouveauStatut,
+            ouvrier: updated
+        });
+        
+    } catch (error) {
+        console.error("Erreur lors du basculement du statut:", error);
+        res.status(500).json({ message: "Erreur lors du basculement du statut" });
+    }
+}
+
 export const toggleOuvrierStatut = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -169,11 +215,9 @@ export const toggleOuvrierStatut = async (req: Request, res: Response) => {
         let nouveauStatut: StatutOuvrier;
         let updateData: Partial<IOuvrier> = {};
 
-        // Logique de basculement
         switch (ouvrierActuel.statut) {
             case "disponible":
                 nouveauStatut = "occupe";
-                // Garder la tâche suivante comme tâche actuelle si elle existe
                 if (ouvrierActuel.tacheSuivante) {
                     updateData.tacheActuelle = ouvrierActuel.tacheSuivante;
                     updateData.tacheSuivante = null;
@@ -211,7 +255,6 @@ export const toggleOuvrierStatut = async (req: Request, res: Response) => {
     }
 };
 
-// Affecter une tâche à un ouvrier
 export const affecterTache = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -244,7 +287,6 @@ export const affecterTache = async (req: Request, res: Response) => {
     }
 };
 
-// Libérer un ouvrier (terminer sa tâche actuelle)
 export const libererOuvrier = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -260,7 +302,6 @@ export const libererOuvrier = async (req: Request, res: Response) => {
             heuresJour: 0
         };
 
-        // Si il y a une tâche suivante, la promouvoir comme tâche actuelle
         if (ouvrier.tacheSuivante) {
             updateData.tacheActuelle = ouvrier.tacheSuivante;
             updateData.tacheSuivante = null;
@@ -280,7 +321,6 @@ export const libererOuvrier = async (req: Request, res: Response) => {
     }
 };
 
-// Mettre à jour les heures de travail
 export const updateHeuresTravail = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -295,7 +335,6 @@ export const updateHeuresTravail = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Ouvrier non trouvé" });
         }
 
-        // Vérifier que les heures ne dépassent pas le maximum
         if (heuresJour > ouvrier.heuresMax) {
             return res.status(400).json({ 
                 message: `Heures dépassent le maximum autorisé (${ouvrier.heuresMax}h)` 
@@ -319,7 +358,6 @@ export const updateHeuresTravail = async (req: Request, res: Response) => {
     }
 };
 
-// Statistiques détaillées
 export const getOuvriersStatistics = async (_req: Request, res: Response) => {
     try {
         const [
@@ -340,7 +378,6 @@ export const getOuvriersStatistics = async (_req: Request, res: Response) => {
             Ouvrier.countDocuments({ niveau: "Débutant" })
         ]);
 
-        // Statistiques sur les heures de travail
         const heuresStats = await Ouvrier.aggregate([
             {
                 $group: {
@@ -353,7 +390,6 @@ export const getOuvriersStatistics = async (_req: Request, res: Response) => {
             }
         ]);
 
-        // Répartition par compétences
         const competencesStats = await Ouvrier.aggregate([
             { $unwind: "$competences" },
             { $group: { _id: "$competences", count: { $sum: 1 } } },
@@ -382,7 +418,7 @@ export const getOuvriersStatistics = async (_req: Request, res: Response) => {
                 tauxUtilisation: stats.totalHeuresMax > 0 ? 
                     Math.round((stats.totalHeuresJour / stats.totalHeuresMax) * 100) : 0
             },
-            competences: competencesStats.slice(0, 10), // Top 10 des compétences
+            competences: competencesStats.slice(0, 10),
             tauxDisponibilite: total > 0 ? Math.round((disponibles / total) * 100) : 0,
             tauxOccupation: total > 0 ? Math.round((occupes / total) * 100) : 0
         });
@@ -391,7 +427,6 @@ export const getOuvriersStatistics = async (_req: Request, res: Response) => {
     }
 };
 
-// Recherche d'ouvriers par critères multiples
 export const searchOuvriers = async (req: Request, res: Response) => {
     try {
         const { 

@@ -19,7 +19,7 @@ app.use(express.json());
 app.use("/machines", machinesRoutes);
 app.use("/ouvriers", ouvriersRoutes);
 app.use("/ateliers", ateliersRoutes);
-app.use("/petri-net", petriNetRoutes)
+app.use("/petri-net", petriNetRoutes);
 app.use("/taches", tacheRoutes);
 
 connectDB().then(() => {

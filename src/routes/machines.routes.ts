@@ -11,12 +11,12 @@ import {
     listTypes,
     listUsages,
     updateMachineStatus,
-    getMachinesStatistics
+    getMachinesStatistics,
+    cycleMachineStatus
 } from "../controllers/machines.controller";
 
 const machinesRoutes = Router();
 
-// Routes spéciales d'abord (pour éviter les conflits)
 machinesRoutes.get("/statistiques", getMachinesStatistics);
 machinesRoutes.get("/meta/types", listTypes);
 machinesRoutes.get("/meta/usages", listUsages);
@@ -24,10 +24,9 @@ machinesRoutes.get("/status/:status", filterByStatus);
 machinesRoutes.get("/type/:type", filterByType);
 machinesRoutes.get("/usage/:usage", filterByUsage);
 
-// Mise à jour du statut
-machinesRoutes.patch("/:id/status", updateMachineStatus);
+machinesRoutes.patch("/:id/:status", updateMachineStatus);
+machinesRoutes.patch("/:id/status/cycle-status", cycleMachineStatus);
 
-// Routes CRUD
 machinesRoutes.get("/", getAllMachines);
 machinesRoutes.post("/", createMachine);
 machinesRoutes.get("/:id", getMachine);
